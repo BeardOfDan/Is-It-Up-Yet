@@ -38,12 +38,12 @@ const pageSchema = mongoose.Schema({
   }],
   // NOTE: A user can only appear in EITHER watchersTemp OR watchersAlways
   //       If a users opts into one, while in the other, they will be removed from the other
-  'watchersTemp': String, // User IDs for people to notify if it goes up/down (but only for a short time)
+  'watchersTemp': [String], // User IDs for people to notify if it goes up/down (but only for a short time)
   //                         These users likely only want to know when the site finally comes back up
   //                         After the website has been up for a length of time (probably an hour), this list will be wiped
   // TODO: Add functionality for a user to determine if they care that it just went online (and don't care if it crashes right after),
   //       or if they want to know when it is deemed 'stable' (has been on for at least an hour), or both
-  'watchersAlways': String  // User IDs for people to notify if it goes up/down
+  'watchersAlways': [String]  // User IDs for people to notify if it goes up/down
   //                           This list is only updated by users opting in or out of it
 });
 
@@ -138,17 +138,40 @@ const hasPages = async (arr) => {
 const savePage = (url) => {
   // TODO: Check to ensure that the url does not already have a page entry
 
-  const page = new Page({ url });
+  const page = new Page({
+    url,
+    'changeLog': [],
+    'watchersTemp': [],
+    'watchersAlways': []
+  });
 
   return page
     .save()
     .then(function (savedPage) {
-      // TODO: Use SetTimeout to update the page after this function has returned
+      // Initially checks if the page is up or down, also initializes certain fields
+      initializePage(savedPage);
+
       return savedPage;
     })
     .catch((e) => {
       console.log('ERROR!\n  could not save the page with the url ', url, '\n', e);
     });
+};
+
+const initializePage = (page) => {
+
+  // 'isUp': Boolean, // true => the page is up and false => the page is down
+  // 'lastChecked': Number, // Unix time stamp
+  // 'lastChangeAt': Number, // Unix time stamp of when the page last went up/down
+
+  // push a new value to this, based on the values above
+  // 'changeLog': [{
+  //   'status': Boolean, // true => came back online; false=> went offline
+  //   'at': Number // Unix time stamp of when the change was logged
+  // }],
+
+
+
 };
 
 // pages is an array of page urls
