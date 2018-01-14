@@ -2,6 +2,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
+const bluebird = require('bluebird');
 
 // get environment variables
 require('dotenv').config();
@@ -11,14 +12,55 @@ const DB = require(path.join(__dirname + '/../db/index.js'));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.static(path.join(__dirname + '/public/')));
+app.use(express.static(path.join(__dirname, '/../public/')));
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
 // parse application/json
 app.use(bodyParser.json());
 
+app.get('/status', (req, res, next) => {
+  res.status(200).end('db status: ' + DB.getStatus());
+});
 
+app.get('/test', (req, res, next) => {
+  const urls = [
+    "example.com",
+    "google.com",
+    "startpage.com"
+  ]
+
+  DB.hasURLs(urls)
+    .then((result) => {
+      res.status(200).end('res: ' + JSON.stringify(result, undefined, 2));
+    })
+    .catch((e) => {
+      res.status(400).end('error: ' + e);
+    });
+});
+
+app.post('/test', (req, res, next) => {
+  const urls = req.body.urls;
+
+  const promises = [];
+  const results = [];
+
+  for (let i = 0; i < urls.length; i++) {
+    promises.push(DB.savePage(urls[i])
+      .then((result) => {
+        results.push({ 'url': urls[i], 'result': result });
+      }));
+  }
+
+  bluebird
+    .all(promises)
+    .then(() => {
+      // TODO parse results to determine if all, none, or some (but not all) were saved
+      // Based on this, set the status accordingly
+
+      res.end('results: ' + JSON.stringify(results, undefined, 2));
+    });
+});
 
 
 app.listen(PORT, () => {

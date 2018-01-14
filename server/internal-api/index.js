@@ -3,8 +3,16 @@ const axios = require('axios');
 const DB = require(path.join(__dirname + '/../../db/index.js'));
 
 // Checks if the database already has an entry for a given url
-// TODO: Make a version that can check for multiple urls at once
+// Note: If url is an Array, then this function will handle that case,
+//        thereby handling multiple urls at once
 const alreadyHave = (url) => {
+  let response;
+  if (Array.isArray(url)) {
+    response = DB.hasURLs(url);
+  } else {
+    response = DB.hasURLS([url]);
+  }
+
 
 };
 

@@ -1,6 +1,10 @@
 
 Current App Plan below:
 
+NOTE: Below are primewire specific features, but this should also be a general use site
+      This app will also function as a superior version of 'is it down right now', not only telling
+      you if a site/page is down, but also telling you when it is finally back up.
+
 use axios to test if a url sends back anything in the request body
 
 serve up an html file that lets the user input an url
@@ -18,6 +22,15 @@ have it display a list of the urls
 additionally, parse through the html and find the list of links
   This way, they can be accessed directly, so that SHOULD sidestep any XSS issues
 
+==================
+
+General Functionality:
+
+Add a feature to check (automatically) when a new episode of a given show is posted
+  Also, create notifications of this:
+    Email, Text, Electron App (that runs in the background)
+
+Users can elect to be notified of a change for when a page is up or down
 
 
 
