@@ -17,10 +17,9 @@ app.use(bodyParser.json());
 // get environment variables
 require('dotenv').config();
 
-
-
-
+const DB = require('./../db/index');
 
 app.listen(PORT, () => {
-  console.log('Listening on port: ' + PORT);
+  console.log('\ndb status:', DB.getStatus());
+  console.log('\nListening on port: ' + PORT);
 });

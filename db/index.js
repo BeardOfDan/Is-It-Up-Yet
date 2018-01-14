@@ -14,5 +14,37 @@ if ((process.env.DBPLACE !== undefined) && (process.env.DBPLACE !== null)) {
 
 mongoose.connect(connectionURL, { useMongoClient: true });
 
+const getStatus = () => {
+  /* http://mongoosejs.com/docs/api.html#connection_Connection-readyState
+    Connection ready state
 
+    0 = disconnected
+    1 = connected
+    2 = connecting
+    3 = disconnecting
+  */
+
+  const status = mongoose.connection.readyState;
+
+  switch (status) {
+    case 0:
+      return 'disconnected';
+      break;
+    case 1:
+      return 'connected';
+      break;
+    case 2:
+      return 'connecting';
+      break;
+    case 3:
+      return 'disconnecting';
+      break;
+    default:
+      return 'Error! Invalid mongoose status!';
+  }
+};
+
+module.exports = {
+  getStatus
+};
 
