@@ -1,0 +1,26 @@
+{
+  "name": "is-it-up-yet",
+  "version": "1.0.0",
+  "description": "An app to automatically save html pages when they are up",
+  "main": "index.js",
+  "dependencies": {
+    "axios": "^0.17.1",
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BeardOfDan/Is-It-Up-Yet.git"
+  },
+  "author": "Dan Roberts",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BeardOfDan/Is-It-Up-Yet/issues"
+  },
+  "homepage": "https://github.com/BeardOfDan/Is-It-Up-Yet#readme"
+}
