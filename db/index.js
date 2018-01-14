@@ -137,7 +137,7 @@ const savePage = (url) => {
 
   const page = new Page({ url });
 
-  page
+  return page
     .save()
     .then((result) => {
       console.log('Just saved a new Page with url:', url);
@@ -152,9 +152,22 @@ const savePage = (url) => {
     });
 };
 
+// pages is an array of page urls
+const savePages = async (pages) => {
+  const results = [];
+
+  for (let i = 0; i < pages.length; i++) {
+    const pageResult = await savePage(pages[i]);
+    results.push(pageResult);
+  }
+
+  return results;
+};
+
 module.exports = {
   getStatus,
   hasURLs,
-  savePage
+  savePage,
+  savePages
 };
 

@@ -42,24 +42,44 @@ app.get('/test', (req, res, next) => {
 app.post('/test', (req, res, next) => {
   const urls = req.body.urls;
 
-  const promises = [];
-  const results = [];
-
-  for (let i = 0; i < urls.length; i++) {
-    promises.push(DB.savePage(urls[i])
-      .then((result) => {
-        results.push({ 'url': urls[i], 'result': result });
-      }));
-  }
-
-  bluebird
-    .all(promises)
-    .then(() => {
-      // TODO parse results to determine if all, none, or some (but not all) were saved
-      // Based on this, set the status accordingly
+  DB.savePages(urls)
+    .then((results) => {
+      console.log('results:', results);
 
       res.end('results: ' + JSON.stringify(results, undefined, 2));
     });
+
+  // const promises = [];
+  // const results = [];
+
+  // for (let i = 0; i < urls.length; i++) {
+  //   promises.push(DB.savePage(urls[i])
+  //     .then((result) => {
+  //       results.push({ 'url': urls[i], 'result': result });
+  //     }));
+  // }
+
+  // const promises = urls.map((url) => {
+  //   return new Promise((resolve, reject) => {
+  //     resolve(DB.savePage(url));
+  //   })
+  //     .then((response) => {
+  //       results.push({ 'url': urls[i], 'result': result });
+  //     })
+  //     .catch((e) => {
+  //       console.log('Error! app.post(test)');
+  //     });
+  // });
+
+
+  // bluebird
+  //   .all(promises)
+  //   .then(() => {
+  //     // TODO parse results to determine if all, none, or some (but not all) were saved
+  //     // Based on this, set the status accordingly
+
+  //     res.end('results: ' + JSON.stringify(results, undefined, 2));
+  //   });
 });
 
 
