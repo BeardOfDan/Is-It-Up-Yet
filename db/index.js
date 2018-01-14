@@ -27,7 +27,7 @@ mongoose.connect(connectionURL, { useMongoClient: true });
 
 // pageSchema is for generally checking if a webpage is up yet (or if it went down)
 const pageSchema = mongoose.Schema({
-  'url': String,
+  'url': { type: String, unique: true, dropDups: true },
   'isUp': Boolean, // true => the page is up and false => the page is down
   'lastChecked': Number, // Unix time stamp
   'lastChangeAt': Number, // Unix time stamp of when the page last went up/down
@@ -106,30 +106,33 @@ const getStatus = () => {
   }
 };
 
-// Checks if urls have a Page entry
-// Accepts an array of urls
-// Outputs an array of objects with a property 'has'
-// 'has' is a boolean representing if the database has an entry for that url
+// Checks if there is a saved page for the given url
 // TODO: Make a version for primewire
-const hasURLs = (urls) => {
-  /*
-    Example input
-    ['sample', 'example']
-
-    Example output
-    [{'url': 'sample', 'has': true}, {'url': 'example', 'has': false}]
-  */
-
+const hasPage = (url) => {
   return Page
-    .find({ 'url': { $in: urls } })
+    .findOne({ url })
     .exec()
     .then((result) => {
-      // The result is in an array, so return the first element
-      return result[0];
+      if (result === null) {
+        return false;
+      }
+      return true;
     })
     .catch((e) => {
       return e;
     });
+};
+
+// arr is an array of urls
+const hasPages = async (arr) => {
+  const results = [];
+
+  for (let i = 0; i < arr.length; i++) {
+    const result = await hasPage(arr[i]);
+    results.push({ 'url': arr[i], 'hasPage': result });
+  }
+
+  return results;
 };
 
 const savePage = (url) => {
@@ -139,16 +142,12 @@ const savePage = (url) => {
 
   return page
     .save()
-    .then((result) => {
-      console.log('Just saved a new Page with url:', url);
-
+    .then(function (savedPage) {
       // TODO: Use SetTimeout to update the page after this function has returned
-
-      return true; // confirm that the page was saved
+      return savedPage;
     })
     .catch((e) => {
-      console.log('Error! Could not save Page with url:', url);
-      return false; // inform the caller of the function of the failure to save
+      console.log('ERROR!\n  could not save the page with the url ', url, '\n', e);
     });
 };
 
@@ -158,7 +157,9 @@ const savePages = async (pages) => {
 
   for (let i = 0; i < pages.length; i++) {
     const pageResult = await savePage(pages[i]);
-    results.push(pageResult);
+    if (pageResult !== undefined) {
+      results.push(pageResult);
+    }
   }
 
   return results;
@@ -166,7 +167,8 @@ const savePages = async (pages) => {
 
 module.exports = {
   getStatus,
-  hasURLs,
+  hasPage,
+  hasPages,
   savePage,
   savePages
 };
