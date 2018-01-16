@@ -163,18 +163,35 @@ const savePage = (url) => {
 
 const initializePage = (page) => {
 
-  console.log('\n\nInitializePage\n');
-
-  // axios call
-  // then     date.now()
-  //          push object to changelog
-
-  console.log('page.url', page.url);
-
   axios.get('http://www.' + page.url)
     .then((response) => {
-      console.log('\n\n======================\nresponse.status:', JSON.stringify(response.status, undefined, 2));
-      console.log('\n======================\nresponse.length:', JSON.stringify(response.data.length));
+      const isUp = (response.data.length > 0) ? true : false;
+      const lastStatus = response.status;
+      const lastChecked = Date.now();
+      const lastChangeAt = lastChecked;
+
+      const changeLog = [];
+      changeLog.push({
+        'status': isUp,
+        'at': lastChecked
+      });
+
+      Page.findByIdAndUpdate(page._id, {
+        '$set':
+          {
+            isUp,
+            lastStatus,
+            lastChecked,
+            lastChangeAt,
+            changeLog
+          }
+      })
+        .then((response) => {
+          console.log('sucessfully updated for: ' + response.url);
+        })
+        .catch((e) => {
+          console.log('Failed to update for: ' + page.url);
+        });
     })
     .catch((e) => {
       console.log('\n\n --------- \n\n ERROR: ' + e);
