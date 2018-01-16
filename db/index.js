@@ -139,32 +139,43 @@ const hasPages = async (arr) => {
   return results;
 };
 
+// If successful, returns the saved entry
+// If the save is unsucessful, returns undefined
+// If an entry already exists, returns null
 const savePage = (url) => {
-  // TODO: Check to ensure that the url does not already have a page entry
+  return Page.findOne({ 'url': url })
+    .then((result) => {
+      if (result === null) { // it does not already exist
+        const page = new Page({
+          url,
+          'changeLog': [],
+          'watchersTemp': [],
+          'watchersAlways': []
+        });
 
-  const page = new Page({
-    url,
-    'changeLog': [],
-    'watchersTemp': [],
-    'watchersAlways': []
-  });
+        return page
+          .save()
+          .then(function (savedPage) {
+            // Initially checks if the page is up or down, also initializes certain fields
+            initializePage(savedPage);
 
-  return page
-    .save()
-    .then(function (savedPage) {
-      // Initially checks if the page is up or down, also initializes certain fields
-      initializePage(savedPage);
+            return savedPage;
+          })
+          .catch((e) => {
+            if (e.errmsg.slice(0, 32) === 'E11000 duplicate key error index') {
+              console.log(`\nAttempted to save page with url ${page.url}, but it already has an entry!\n`);
+              // TODO: Log this event. After the app is fully implemented, this should not be able to occur
+            } else {
+              console.log('ERROR!\n  could not save the page with the url ', url, '\n', e);
+            }
 
-      return savedPage;
-    })
-    .catch((e) => {
-      if (e.errmsg.slice(0, 32) === 'E11000 duplicate key error index') {
-        console.log(`\nAttempted to save page with url ${page.url}, but it already has an entry!\n`);
+            return undefined; // signify error in saving
+          });
       } else {
-        console.log('ERROR!\n  could not save the page with the url ', url, '\n', e);
+        return null; // signify that there is already an entry for the page
       }
     });
-};
+}; // end of savePage(url)
 
 // Performs initial call to the url and saves the data
 // Note: Because it is the initial call, it is necessarily different from an update
@@ -183,8 +194,8 @@ const initializePage = (page) => {
             lastStatus,
             lastChecked,
             lastChangeAt
-          }
-        , '$push': {
+          },
+        '$push': {
           'changeLog': {
             isUp,
             'at': lastChecked
@@ -192,11 +203,11 @@ const initializePage = (page) => {
         }
       })
         .then((response) => {
-          console.log('sucessfully updated for: ' + response.url);
+          // TODO: Include this success update in a log
         })
         .catch((e) => {
           console.log('Failed to update for: ' + page.url);
-        });
+        }); // end of Page.findByIdAndUpdate
     })
     .catch((e) => {
       console.log('\n\n --------- \n\n ERROR: ' + e);
@@ -209,7 +220,7 @@ const savePages = async (pages) => {
 
   for (let i = 0; i < pages.length; i++) {
     const pageResult = await savePage(pages[i]);
-    if (pageResult !== undefined) {
+    if ((pageResult !== undefined) && (pageResult !== null)) {
       results.push(pageResult);
     }
   }

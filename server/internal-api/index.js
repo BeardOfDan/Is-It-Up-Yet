@@ -31,6 +31,7 @@ const acquire = (url, interval = 10000) => {
 };
 
 // Returns an array of the links in the page
+// NOTE: This is a primewire specific function
 const getLinks = (url) => {
 
 };
