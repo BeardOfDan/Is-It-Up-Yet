@@ -1,5 +1,3 @@
-'use strict';
-
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
 const axios = require('axios');
@@ -50,6 +48,34 @@ const pageSchema = mongoose.Schema({
   'watchersAlways': [String]  // User IDs for people to notify if it goes up/down
   //                           This list is only updated by users opting in or out of it
 });
+
+// This method updates the 'changeLog' property
+// It should be called when saving an update to the page
+pageSchema.methods.updateLog = (id) => {
+  // If the save records a change in status, update the log
+  if (this.lastChangeAt !== this.changeLog[this.changeLog.length - 1].at) {
+    this.findByIdAndUpdate(id, {
+      '$push': {
+        'changeLog': {
+          'isUp': this.isUp,
+          'at': this.lastChangeAt
+        }
+      }
+    })
+      .then(() => {
+        return true; // signify success
+      })
+      .catch((e) => {
+        console.log('\n\nError in \'pageSchema.methods.updateLog\'');
+        console.log('\nid:', id);
+        console.log('Error Message:', e);
+        // TODO: Log failure
+
+        return false // signify failure
+      });
+  }
+  return null; // signify that it was not required
+};
 
 const primewireSchema = mongoose.Schema({
   'url': String,
@@ -164,7 +190,7 @@ const savePage = (url) => {
           .catch((e) => {
             if (e.errmsg.slice(0, 32) === 'E11000 duplicate key error index') {
               console.log(`\nAttempted to save page with url ${page.url}, but it already has an entry!\n`);
-              // TODO: Log this event. After the app is fully implemented, this should not be able to occur
+              // TODO: Log this event. This should not be able to occur.
             } else {
               console.log('ERROR!\n  could not save the page with the url ', url, '\n', e);
             }
@@ -227,6 +253,47 @@ const savePages = async (pages) => {
 
   return results;
 };
+
+const savePageUpdate = async (oldPage, newDataObject) => {
+
+
+  // 'url': { type: String, unique: true, dropDups: true },
+  // 'isUp': Boolean, // true => the page is up and false => the page is down
+  // 'lastStatus': Number, // The HTTP status code returned with the last page request
+  // 'lastChecked': Number, // Unix time stamp
+  // 'lastChangeAt': Number, // Unix time stamp of when the page last went up/down
+  // //                         This is to calculate the up/down time
+  // 'changeLog': [{
+  //   'isUp': Boolean, // true => came back online; false => went offline
+  //   'at': Number // Unix time stamp of when the change was logged
+  // }],
+
+};
+
+// specifier can either be a string or an object
+//   if it is a string, then it is assumed to be the url
+//   if it is an object, then the key is the page property
+//                       and the value is the specific value
+const getPage = async (specifier) => {
+  if (typeof specifier === 'string') {
+    return Page
+      .findOne({ 'url': specifier })
+      .exec()
+      .then((result) => {
+        return result;
+      });
+  } else {
+    // presumably only 1 specifier would be used
+    // obviously this can be extended to handle multiple specifier properties
+    const key = Object.keys(specifier)[0];
+    return Page
+      .findOne({ key: specifier[key] })
+      .exec()
+      .then((result) => {
+        return result;
+      });
+  }
+}; // end of async getPage (specifier)
 
 module.exports = {
   getStatus,
