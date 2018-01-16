@@ -1,7 +1,8 @@
-const axios = require('axios');
+'use strict';
 
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
+const axios = require('axios');
 
 mongoose.Promise = Promise;
 
@@ -36,7 +37,7 @@ const pageSchema = mongoose.Schema({
   'lastChangeAt': Number, // Unix time stamp of when the page last went up/down
   //                         This is to calculate the up/down time
   'changeLog': [{
-    'status': Boolean, // true => came back online; false => went offline
+    'isUp': Boolean, // true => came back online; false => went offline
     'at': Number // Unix time stamp of when the change was logged
   }],
   // NOTE: A user can only appear in EITHER watchersTemp OR watchersAlways
@@ -157,24 +158,23 @@ const savePage = (url) => {
       return savedPage;
     })
     .catch((e) => {
-      console.log('ERROR!\n  could not save the page with the url ', url, '\n', e);
+      if (e.errmsg.slice(0, 32) === 'E11000 duplicate key error index') {
+        console.log(`\nAttempted to save page with url ${page.url}, but it already has an entry!\n`);
+      } else {
+        console.log('ERROR!\n  could not save the page with the url ', url, '\n', e);
+      }
     });
 };
 
+// Performs initial call to the url and saves the data
+// Note: Because it is the initial call, it is necessarily different from an update
 const initializePage = (page) => {
-
-  axios.get('http://www.' + page.url)
+  axios.get(page.url)
     .then((response) => {
       const isUp = (response.data.length > 0) ? true : false;
       const lastStatus = response.status;
       const lastChecked = Date.now();
       const lastChangeAt = lastChecked;
-
-      const changeLog = [];
-      changeLog.push({
-        'status': isUp,
-        'at': lastChecked
-      });
 
       Page.findByIdAndUpdate(page._id, {
         '$set':
@@ -182,9 +182,14 @@ const initializePage = (page) => {
             isUp,
             lastStatus,
             lastChecked,
-            lastChangeAt,
-            changeLog
+            lastChangeAt
           }
+        , '$push': {
+          'changeLog': {
+            isUp,
+            'at': lastChecked
+          }
+        }
       })
         .then((response) => {
           console.log('sucessfully updated for: ' + response.url);
@@ -196,17 +201,7 @@ const initializePage = (page) => {
     .catch((e) => {
       console.log('\n\n --------- \n\n ERROR: ' + e);
     });
-
-  // 'isUp': Boolean, // true => the page is up and false => the page is down
-  // 'lastChecked': Number, // Unix time stamp
-  // 'lastChangeAt': Number, // Unix time stamp of when the page last went up/down
-
-  // push a new value to this, based on the values above
-  // 'changeLog': [{
-  //   'status': Boolean, // true => came back online; false=> went offline
-  //   'at': Number // Unix time stamp of when the change was logged
-  // }],
-};
+}; // end of initializePage(page)
 
 // pages is an array of page urls
 const savePages = async (pages) => {
