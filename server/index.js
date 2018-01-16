@@ -24,11 +24,10 @@ app.get('/status', (req, res, next) => {
 });
 
 app.get('/asdf', (req, res, next) => {
-  const urls = ['example.com', 'google.com', 'startpage.com', 'bing.com'];
+  const urls = ['http://www.example.com', 'http://www.google.com', 'http://www.startpage.com', 'http://www.bing.com'];
 
   DB.hasPages(urls)
     .then((result) => {
-      console.log('sending result...', result);
       res.status(200).end(JSON.stringify(result, undefined, 2));
     })
     .catch((e) => {
@@ -38,11 +37,10 @@ app.get('/asdf', (req, res, next) => {
 });
 
 app.get('/jkl', (req, res, next) => {
-  const urls = ['example.com', 'google.com', 'startpage.com', 'bing.com'];
+  const urls = ['http://www.example.com', 'http://www.google.com', 'http://www.startpage.com', 'http://www.bing.com'];
 
   DB.savePages(urls)
     .then((result) => {
-      console.log('sending result...', result);
       res.status(200).end('result: ' + JSON.stringify(result, undefined, 2));
     })
     .catch((e) => {
