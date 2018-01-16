@@ -1,3 +1,5 @@
+const axios = require('axios');
+
 const mongoose = require('mongoose');
 const Promise = require('bluebird');
 
@@ -29,11 +31,12 @@ mongoose.connect(connectionURL, { useMongoClient: true });
 const pageSchema = mongoose.Schema({
   'url': { type: String, unique: true, dropDups: true },
   'isUp': Boolean, // true => the page is up and false => the page is down
+  'lastStatus': Number, // The HTTP status code returned with the last page request
   'lastChecked': Number, // Unix time stamp
   'lastChangeAt': Number, // Unix time stamp of when the page last went up/down
   //                         This is to calculate the up/down time
   'changeLog': [{
-    'status': Boolean, // true => came back online; false=> went offline
+    'status': Boolean, // true => came back online; false => went offline
     'at': Number // Unix time stamp of when the change was logged
   }],
   // NOTE: A user can only appear in EITHER watchersTemp OR watchersAlways
@@ -160,6 +163,23 @@ const savePage = (url) => {
 
 const initializePage = (page) => {
 
+  console.log('\n\nInitializePage\n');
+
+  // axios call
+  // then     date.now()
+  //          push object to changelog
+
+  console.log('page.url', page.url);
+
+  axios.get('http://www.' + page.url)
+    .then((response) => {
+      console.log('\n\n======================\nresponse.status:', JSON.stringify(response.status, undefined, 2));
+      console.log('\n======================\nresponse.length:', JSON.stringify(response.data.length));
+    })
+    .catch((e) => {
+      console.log('\n\n --------- \n\n ERROR: ' + e);
+    });
+
   // 'isUp': Boolean, // true => the page is up and false => the page is down
   // 'lastChecked': Number, // Unix time stamp
   // 'lastChangeAt': Number, // Unix time stamp of when the page last went up/down
@@ -169,9 +189,6 @@ const initializePage = (page) => {
   //   'status': Boolean, // true => came back online; false=> went offline
   //   'at': Number // Unix time stamp of when the change was logged
   // }],
-
-
-
 };
 
 // pages is an array of page urls
